@@ -5,7 +5,7 @@
  * Description: Run AI-powered website audits directly from your WordPress dashboard. Analyzes performance, SEO, UI/UX, conversion, retention, and accessibility with a prioritized action plan.
  * Version: 1.0.0
  * Author: Webmatik
- * Author URI: https://webmatik.ai
+ * Author URI: https://belov.digital
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: webmatik
