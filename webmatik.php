@@ -3,7 +3,7 @@
  * Plugin Name: Webmatik — AI Website Audit
  * Plugin URI: https://webmatik.ai
  * Description: Run AI-powered website audits directly from your WordPress dashboard. Analyzes performance, SEO, UI/UX, conversion, retention, and accessibility with a prioritized action plan.
- * Version: 1.1.0
+ * Version: 1.0.0
  * Author: Webmatik
  * Author URI: https://webmatik.ai
  * License: GPL-2.0-or-later
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WEBMATIK_VERSION', '1.1.0' );
+define( 'WEBMATIK_VERSION', '1.0.0' );
 define( 'WEBMATIK_API_URL', 'https://webmatik.ai/api/v1' );
 define( 'WEBMATIK_CONNECT_URL', 'https://webmatik.ai/connect?source=WordPress' );
 define( 'WEBMATIK_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );

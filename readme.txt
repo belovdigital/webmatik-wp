@@ -4,7 +4,7 @@ Tags: seo, audit, performance, accessibility, website analysis
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.0.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -72,18 +72,9 @@ No. The audit runs on Webmatik's servers, not on your WordPress installation.
 
 == Changelog ==
 
-= 1.1.0 =
-* New: One-click Connect flow — no manual API key entry needed
-* New: Connect and Run Audit on a single page
-* New: uninstall.php for clean option removal on plugin delete
-* Improved: All JS externalized via wp_enqueue_script (WP coding standards)
-* Improved: Full i18n support — all strings translation-ready
-* Improved: Data sanitization and output escaping throughout
-* Improved: UUID validation on audit polling
-* Improved: postMessage origin verification for security
-
 = 1.0.0 =
 * Initial release
-* One-click audit from WordPress admin
+* One-click Connect flow from WordPress admin
+* Run audit directly from plugin page
 * Dashboard widget with Growth Score
-* Settings page for API key
+* Full report link to webmatik.ai
