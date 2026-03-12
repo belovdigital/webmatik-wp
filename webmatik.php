@@ -8,7 +8,7 @@
  * Author URI: https://belov.digital
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: webmatik
+ * Text Domain: webmatik-ai-website-audit
  * Requires at least: 5.8
  * Requires PHP: 7.4
  */
@@ -56,7 +56,7 @@ function webmatik_register_settings() {
 add_action( 'admin_enqueue_scripts', 'webmatik_enqueue_scripts' );
 
 function webmatik_enqueue_scripts( $hook ) {
-	if ( false === strpos( $hook, 'webmatik' ) ) {
+	if ( false === strpos( $hook, 'webmatik-ai-website-audit' ) ) {
 		return;
 	}
 
@@ -87,7 +87,7 @@ function webmatik_main_page() {
 	$last_audit = get_option( 'webmatik_last_audit', null );
 	?>
 	<div class="wrap">
-		<h1><?php esc_html_e( 'Webmatik', 'webmatik' ); ?></h1>
+		<h1><?php esc_html_e( 'Webmatik', 'webmatik-ai-website-audit' ); ?></h1>
 
 		<!-- Connection status -->
 		<div id="webmatik-connection" style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;margin:20px 0;max-width:600px;">
@@ -96,19 +96,19 @@ function webmatik_main_page() {
 					<div style="display:flex;align-items:center;gap:8px;">
 						<span style="color:#46b450;font-size:18px;">&#10003;</span>
 						<span>
-							<strong><?php esc_html_e( 'Connected', 'webmatik' ); ?></strong>
+							<strong><?php esc_html_e( 'Connected', 'webmatik-ai-website-audit' ); ?></strong>
 							<span style="color:#787c82;font-size:13px;">(<?php echo esc_html( substr( $api_key, 0, 12 ) ); ?>...)</span>
 						</span>
 					</div>
 					<button id="webmatik-disconnect" class="button button-link" style="color:#d63638;text-decoration:none;">
-						<?php esc_html_e( 'Disconnect', 'webmatik' ); ?>
+						<?php esc_html_e( 'Disconnect', 'webmatik-ai-website-audit' ); ?>
 					</button>
 				</div>
 			<?php else : ?>
 				<div style="display:flex;align-items:center;justify-content:space-between;">
-					<span style="color:#787c82;"><?php esc_html_e( 'Not connected', 'webmatik' ); ?></span>
+					<span style="color:#787c82;"><?php esc_html_e( 'Not connected', 'webmatik-ai-website-audit' ); ?></span>
 					<button id="webmatik-connect" class="button button-primary">
-						<?php esc_html_e( 'Connect to Webmatik', 'webmatik' ); ?>
+						<?php esc_html_e( 'Connect to Webmatik', 'webmatik-ai-website-audit' ); ?>
 					</button>
 				</div>
 			<?php endif; ?>
@@ -120,20 +120,20 @@ function webmatik_main_page() {
 				<?php
 				printf(
 					/* translators: %s: site hostname */
-					esc_html__( 'Run a full AI Growth Audit on %s', 'webmatik' ),
+					esc_html__( 'Run a full AI Growth Audit on %s', 'webmatik-ai-website-audit' ),
 					'<strong>' . esc_html( $host ) . '</strong>'
 				);
 				?>
 			</p>
 
 			<button id="webmatik-run-audit" class="button button-primary button-large" <?php disabled( ! $connected ); ?>>
-				<?php esc_html_e( 'Run Audit', 'webmatik' ); ?>
+				<?php esc_html_e( 'Run Audit', 'webmatik-ai-website-audit' ); ?>
 			</button>
 			<span id="webmatik-status" style="margin-left:12px;"></span>
 
 			<?php if ( ! $connected ) : ?>
 				<p id="webmatik-connect-hint" style="margin:10px 0 0;color:#787c82;font-size:13px;">
-					<?php esc_html_e( 'Connect your Webmatik account above to run audits.', 'webmatik' ); ?>
+					<?php esc_html_e( 'Connect your Webmatik account above to run audits.', 'webmatik-ai-website-audit' ); ?>
 				</p>
 			<?php endif; ?>
 
@@ -144,14 +144,14 @@ function webmatik_main_page() {
 							<?php echo esc_html( $last_audit['score'] ); ?>
 						</div>
 						<div>
-							<div style="font-size:14px;font-weight:600;"><?php esc_html_e( 'Growth Score', 'webmatik' ); ?></div>
+							<div style="font-size:14px;font-weight:600;"><?php esc_html_e( 'Growth Score', 'webmatik-ai-website-audit' ); ?></div>
 							<div style="color:#50575e;"><?php echo esc_html( 'Grade: ' . $last_audit['grade'] ); ?></div>
 						</div>
 					</div>
 					<?php if ( ! empty( $last_audit['report_url'] ) ) : ?>
 						<p style="margin:10px 0 0;">
 							<a href="<?php echo esc_url( $last_audit['report_url'] ); ?>" target="_blank" rel="noopener noreferrer" class="button">
-								<?php esc_html_e( 'View Full Report', 'webmatik' ); ?> &rarr;
+								<?php esc_html_e( 'View Full Report', 'webmatik-ai-website-audit' ); ?> &rarr;
 							</a>
 						</p>
 					<?php endif; ?>
@@ -279,7 +279,7 @@ function webmatik_widget_render() {
 		printf(
 			'<p><a href="%s">%s</a></p>',
 			esc_url( admin_url( 'admin.php?page=webmatik' ) ),
-			esc_html__( 'Connect to Webmatik to see your Growth Score.', 'webmatik' )
+			esc_html__( 'Connect to Webmatik to see your Growth Score.', 'webmatik-ai-website-audit' )
 		);
 		return;
 	}
@@ -287,14 +287,14 @@ function webmatik_widget_render() {
 	if ( $last_audit ) {
 		echo '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">';
 		echo '<div style="font-size:28px;font-weight:700;color:#2271b1;">' . esc_html( $last_audit['score'] ) . '</div>';
-		echo '<div><strong>' . esc_html__( 'Growth Score', 'webmatik' ) . '</strong><br>';
+		echo '<div><strong>' . esc_html__( 'Growth Score', 'webmatik-ai-website-audit' ) . '</strong><br>';
 		echo '<span style="color:#787c82;">' . esc_html( 'Grade: ' . $last_audit['grade'] ) . '</span></div>';
 		echo '</div>';
 		if ( ! empty( $last_audit['report_url'] ) ) {
 			printf(
 				'<a href="%s" target="_blank" rel="noopener noreferrer">%s &rarr;</a>',
 				esc_url( $last_audit['report_url'] ),
-				esc_html__( 'View Full Report', 'webmatik' )
+				esc_html__( 'View Full Report', 'webmatik-ai-website-audit' )
 			);
 		}
 		echo '<p style="color:#787c82;font-size:12px;margin-top:5px;">' . esc_html( 'Last audit: ' . $last_audit['date'] ) . '</p>';
@@ -302,7 +302,7 @@ function webmatik_widget_render() {
 		printf(
 			'<p><a href="%s">%s</a></p>',
 			esc_url( admin_url( 'admin.php?page=webmatik' ) ),
-			esc_html__( 'Run your first audit', 'webmatik' )
+			esc_html__( 'Run your first audit', 'webmatik-ai-website-audit' )
 		);
 	}
 }
