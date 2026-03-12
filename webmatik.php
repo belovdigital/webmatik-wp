@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 define( 'WEBMATIK_VERSION', '1.0.0' );
 define( 'WEBMATIK_API_URL', 'https://webmatik.ai/api/v1' );
-define( 'WEBMATIK_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'WEBMATIK_CONNECT_URL', 'https://webmatik.ai/connect?source=WordPress' );
 
 /**
  * Admin menu
@@ -61,36 +61,106 @@ function webmatik_register_settings() {
 }
 
 /**
- * Settings page
+ * Settings page — Connect button (OAuth-like flow via popup)
  */
 function webmatik_settings_page() {
-	$api_key = get_option( 'webmatik_api_key', '' );
+	$api_key   = get_option( 'webmatik_api_key', '' );
 	$connected = ! empty( $api_key );
 	?>
 	<div class="wrap">
 		<h1>Webmatik Settings</h1>
-		<form method="post" action="options.php">
-			<?php settings_fields( 'webmatik_settings' ); ?>
-			<table class="form-table">
-				<tr>
-					<th scope="row"><label for="webmatik_api_key">API Key</label></th>
-					<td>
-						<input type="password" id="webmatik_api_key" name="webmatik_api_key"
-							value="<?php echo esc_attr( $api_key ); ?>"
-							class="regular-text" placeholder="wmk_..." />
-						<p class="description">
-							<?php if ( $connected ) : ?>
-								<span style="color: #46b450;">&#10003; Connected.</span>
-							<?php endif; ?>
-							Get your API key from <a href="https://webmatik.ai/account" target="_blank">webmatik.ai/account</a>
-						</p>
-					</td>
-				</tr>
-			</table>
-			<?php submit_button( 'Save Settings' ); ?>
-		</form>
+
+		<div style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:24px;margin:20px 0;max-width:500px;">
+			<?php if ( $connected ) : ?>
+				<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+					<span style="color:#46b450;font-size:20px;">&#10003;</span>
+					<div>
+						<strong>Connected to Webmatik</strong>
+						<p style="margin:2px 0 0;color:#787c82;font-size:13px;">API key: <?php echo esc_html( substr( $api_key, 0, 12 ) ); ?>...</p>
+					</div>
+				</div>
+				<button id="webmatik-disconnect" class="button" style="color:#d63638;">
+					Disconnect
+				</button>
+			<?php else : ?>
+				<p style="margin:0 0 16px;color:#50575e;">
+					Connect your Webmatik account to run AI website audits from WordPress.
+				</p>
+				<button id="webmatik-connect" class="button button-primary button-large">
+					Connect to Webmatik
+				</button>
+				<p style="margin:12px 0 0;color:#787c82;font-size:12px;">
+					Don&rsquo;t have an account? <a href="https://webmatik.ai" target="_blank">Sign up free</a>
+				</p>
+			<?php endif; ?>
+		</div>
 	</div>
+
+	<script>
+	(function() {
+		// Connect button — open popup
+		var connectBtn = document.getElementById('webmatik-connect');
+		if (connectBtn) {
+			connectBtn.addEventListener('click', function() {
+				var w = 480, h = 600;
+				var left = (screen.width - w) / 2;
+				var top = (screen.height - h) / 2;
+				window.open(
+					'<?php echo esc_js( WEBMATIK_CONNECT_URL ); ?>',
+					'webmatik-connect',
+					'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top
+				);
+			});
+
+			// Listen for postMessage from popup
+			window.addEventListener('message', function(e) {
+				if (e.data && e.data.type === 'webmatik-connect' && e.data.key) {
+					// Save key via AJAX
+					wp.ajax.post('webmatik_save_key', {
+						nonce: '<?php echo esc_js( wp_create_nonce( 'webmatik_save_key' ) ); ?>',
+						api_key: e.data.key
+					}).done(function() {
+						location.reload();
+					}).fail(function() {
+						alert('Failed to save API key. Please try again.');
+					});
+				}
+			});
+		}
+
+		// Disconnect button
+		var disconnectBtn = document.getElementById('webmatik-disconnect');
+		if (disconnectBtn) {
+			disconnectBtn.addEventListener('click', function() {
+				if (!confirm('Disconnect from Webmatik?')) return;
+				wp.ajax.post('webmatik_save_key', {
+					nonce: '<?php echo esc_js( wp_create_nonce( 'webmatik_save_key' ) ); ?>',
+					api_key: ''
+				}).done(function() {
+					location.reload();
+				});
+			});
+		}
+	})();
+	</script>
 	<?php
+}
+
+/**
+ * AJAX: save API key (from connect popup or disconnect)
+ */
+add_action( 'wp_ajax_webmatik_save_key', 'webmatik_ajax_save_key' );
+
+function webmatik_ajax_save_key() {
+	check_ajax_referer( 'webmatik_save_key', 'nonce' );
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( 'Unauthorized' );
+	}
+
+	$key = sanitize_text_field( $_POST['api_key'] ?? '' );
+	update_option( 'webmatik_api_key', $key );
+	wp_send_json_success();
 }
 
 /**
@@ -101,9 +171,10 @@ function webmatik_dashboard_page() {
 
 	if ( empty( $api_key ) ) {
 		echo '<div class="wrap"><h1>Webmatik</h1>';
-		echo '<div class="notice notice-warning"><p>';
-		echo 'Please <a href="' . esc_url( admin_url( 'admin.php?page=webmatik-settings' ) ) . '">add your API key</a> to get started.';
-		echo '</p></div></div>';
+		echo '<div style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:24px;margin:20px 0;max-width:500px;">';
+		echo '<p style="margin:0 0 12px;color:#50575e;">Connect your Webmatik account to get started.</p>';
+		echo '<a href="' . esc_url( admin_url( 'admin.php?page=webmatik-settings' ) ) . '" class="button button-primary">Connect to Webmatik</a>';
+		echo '</div></div>';
 		return;
 	}
 
@@ -113,7 +184,7 @@ function webmatik_dashboard_page() {
 	<div class="wrap">
 		<h1>Webmatik — AI Website Audit</h1>
 
-		<div class="webmatik-card" style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;margin:20px 0;max-width:600px;">
+		<div style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;margin:20px 0;max-width:600px;">
 			<p style="margin:0 0 15px;color:#50575e;">
 				Run a full Growth Audit on <strong><?php echo esc_html( wp_parse_url( $site_url, PHP_URL_HOST ) ); ?></strong>
 			</p>
@@ -166,7 +237,7 @@ function webmatik_dashboard_page() {
 				nonce: '<?php echo esc_js( wp_create_nonce( 'webmatik_run_audit' ) ); ?>'
 			}).done(function(data) {
 				if (data.auditId) {
-					status.textContent = 'Analyzing... this takes 2–3 minutes.';
+					status.textContent = 'Analyzing... this takes 2\u20133 minutes.';
 					pollAudit(data.auditId);
 				} else {
 					status.textContent = 'Error: ' + (data.error || 'Unknown error');
@@ -224,7 +295,7 @@ function webmatik_ajax_run_audit() {
 
 	$api_key = get_option( 'webmatik_api_key', '' );
 	if ( empty( $api_key ) ) {
-		wp_send_json_error( 'API key not configured' );
+		wp_send_json_error( 'Not connected. Go to Settings to connect.' );
 	}
 
 	$response = wp_remote_post( WEBMATIK_API_URL . '/audit', array(
@@ -268,7 +339,7 @@ function webmatik_ajax_poll_audit() {
 	$audit_id = sanitize_text_field( $_POST['audit_id'] ?? '' );
 
 	if ( empty( $api_key ) || empty( $audit_id ) ) {
-		wp_send_json_error( 'Missing API key or audit ID' );
+		wp_send_json_error( 'Missing data' );
 	}
 
 	$response = wp_remote_get( WEBMATIK_API_URL . '/audit/' . $audit_id, array(
@@ -318,7 +389,7 @@ function webmatik_widget_render() {
 	$last_audit = get_option( 'webmatik_last_audit', null );
 
 	if ( empty( $api_key ) ) {
-		echo '<p>Connect your Webmatik account: <a href="' . esc_url( admin_url( 'admin.php?page=webmatik-settings' ) ) . '">Settings</a></p>';
+		echo '<p>Connect your Webmatik account: <a href="' . esc_url( admin_url( 'admin.php?page=webmatik-settings' ) ) . '">Connect</a></p>';
 		return;
 	}
 
