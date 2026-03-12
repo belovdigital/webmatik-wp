@@ -3,7 +3,7 @@
  * Plugin Name: Webmatik — AI Website Audit
  * Plugin URI: https://webmatik.ai
  * Description: Run AI-powered website audits directly from your WordPress dashboard. Analyzes performance, SEO, UI/UX, conversion, retention, and accessibility with a prioritized action plan.
- * Version: 1.0.1
+ * Version: 1.1.0
  * Author: Webmatik
  * Author URI: https://webmatik.ai
  * License: GPL-2.0-or-later
@@ -17,13 +17,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WEBMATIK_VERSION', '1.0.1' );
+define( 'WEBMATIK_VERSION', '1.1.0' );
 define( 'WEBMATIK_API_URL', 'https://webmatik.ai/api/v1' );
 define( 'WEBMATIK_CONNECT_URL', 'https://webmatik.ai/connect?source=WordPress' );
+define( 'WEBMATIK_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'WEBMATIK_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
-/**
- * Admin menu — single page, no submenu
- */
+/* ───────────────────────── Admin menu ───────────────────────── */
+
 add_action( 'admin_menu', 'webmatik_admin_menu' );
 
 function webmatik_admin_menu() {
@@ -38,9 +39,8 @@ function webmatik_admin_menu() {
 	);
 }
 
-/**
- * Register setting
- */
+/* ─────────────────────── Register setting ───────────────────── */
+
 add_action( 'admin_init', 'webmatik_register_settings' );
 
 function webmatik_register_settings() {
@@ -51,18 +51,43 @@ function webmatik_register_settings() {
 	) );
 }
 
-/**
- * Single main page — connect + audit in one place
- */
+/* ─────────────────── Enqueue admin scripts ──────────────────── */
+
+add_action( 'admin_enqueue_scripts', 'webmatik_enqueue_scripts' );
+
+function webmatik_enqueue_scripts( $hook ) {
+	if ( false === strpos( $hook, 'webmatik' ) ) {
+		return;
+	}
+
+	wp_enqueue_script( 'wp-util' );
+
+	wp_enqueue_script(
+		'webmatik-admin',
+		WEBMATIK_PLUGIN_URL . 'assets/js/webmatik-admin.js',
+		array( 'wp-util' ),
+		WEBMATIK_VERSION,
+		true
+	);
+
+	wp_localize_script( 'webmatik-admin', 'webmatikAdmin', array(
+		'connectUrl' => WEBMATIK_CONNECT_URL,
+		'saveNonce'  => wp_create_nonce( 'webmatik_save_key' ),
+		'runNonce'   => wp_create_nonce( 'webmatik_run_audit' ),
+		'pollNonce'  => wp_create_nonce( 'webmatik_poll_audit' ),
+	) );
+}
+
+/* ─────────────────── Main page (connect + audit) ────────────── */
+
 function webmatik_main_page() {
 	$api_key    = get_option( 'webmatik_api_key', '' );
 	$connected  = ! empty( $api_key );
-	$site_url   = home_url();
-	$host       = wp_parse_url( $site_url, PHP_URL_HOST );
+	$host       = wp_parse_url( home_url(), PHP_URL_HOST );
 	$last_audit = get_option( 'webmatik_last_audit', null );
 	?>
 	<div class="wrap">
-		<h1>Webmatik</h1>
+		<h1><?php esc_html_e( 'Webmatik', 'webmatik' ); ?></h1>
 
 		<!-- Connection status -->
 		<div id="webmatik-connection" style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;margin:20px 0;max-width:600px;">
@@ -70,17 +95,20 @@ function webmatik_main_page() {
 				<div style="display:flex;align-items:center;justify-content:space-between;">
 					<div style="display:flex;align-items:center;gap:8px;">
 						<span style="color:#46b450;font-size:18px;">&#10003;</span>
-						<span><strong>Connected</strong> <span style="color:#787c82;font-size:13px;">(<?php echo esc_html( substr( $api_key, 0, 12 ) ); ?>...)</span></span>
+						<span>
+							<strong><?php esc_html_e( 'Connected', 'webmatik' ); ?></strong>
+							<span style="color:#787c82;font-size:13px;">(<?php echo esc_html( substr( $api_key, 0, 12 ) ); ?>...)</span>
+						</span>
 					</div>
 					<button id="webmatik-disconnect" class="button button-link" style="color:#d63638;text-decoration:none;">
-						Disconnect
+						<?php esc_html_e( 'Disconnect', 'webmatik' ); ?>
 					</button>
 				</div>
 			<?php else : ?>
 				<div style="display:flex;align-items:center;justify-content:space-between;">
-					<span style="color:#787c82;">Not connected</span>
+					<span style="color:#787c82;"><?php esc_html_e( 'Not connected', 'webmatik' ); ?></span>
 					<button id="webmatik-connect" class="button button-primary">
-						Connect to Webmatik
+						<?php esc_html_e( 'Connect to Webmatik', 'webmatik' ); ?>
 					</button>
 				</div>
 			<?php endif; ?>
@@ -89,17 +117,23 @@ function webmatik_main_page() {
 		<!-- Audit -->
 		<div style="background:#fff;border:1px solid #c3c4c7;border-radius:8px;padding:20px;margin:20px 0;max-width:600px;">
 			<p style="margin:0 0 15px;color:#50575e;">
-				Run a full AI Growth Audit on <strong><?php echo esc_html( $host ); ?></strong>
+				<?php
+				printf(
+					/* translators: %s: site hostname */
+					esc_html__( 'Run a full AI Growth Audit on %s', 'webmatik' ),
+					'<strong>' . esc_html( $host ) . '</strong>'
+				);
+				?>
 			</p>
 
-			<button id="webmatik-run-audit" class="button button-primary button-large" <?php echo $connected ? '' : 'disabled'; ?>>
-				Run Audit
+			<button id="webmatik-run-audit" class="button button-primary button-large" <?php disabled( ! $connected ); ?>>
+				<?php esc_html_e( 'Run Audit', 'webmatik' ); ?>
 			</button>
 			<span id="webmatik-status" style="margin-left:12px;"></span>
 
 			<?php if ( ! $connected ) : ?>
 				<p id="webmatik-connect-hint" style="margin:10px 0 0;color:#787c82;font-size:13px;">
-					Connect your Webmatik account above to run audits.
+					<?php esc_html_e( 'Connect your Webmatik account above to run audits.', 'webmatik' ); ?>
 				</p>
 			<?php endif; ?>
 
@@ -110,19 +144,19 @@ function webmatik_main_page() {
 							<?php echo esc_html( $last_audit['score'] ); ?>
 						</div>
 						<div>
-							<div style="font-size:14px;font-weight:600;">Growth Score</div>
-							<div style="color:#50575e;">Grade: <?php echo esc_html( $last_audit['grade'] ); ?></div>
+							<div style="font-size:14px;font-weight:600;"><?php esc_html_e( 'Growth Score', 'webmatik' ); ?></div>
+							<div style="color:#50575e;"><?php echo esc_html( 'Grade: ' . $last_audit['grade'] ); ?></div>
 						</div>
 					</div>
 					<?php if ( ! empty( $last_audit['report_url'] ) ) : ?>
 						<p style="margin:10px 0 0;">
-							<a href="<?php echo esc_url( $last_audit['report_url'] ); ?>" target="_blank" class="button">
-								View Full Report &rarr;
+							<a href="<?php echo esc_url( $last_audit['report_url'] ); ?>" target="_blank" rel="noopener noreferrer" class="button">
+								<?php esc_html_e( 'View Full Report', 'webmatik' ); ?> &rarr;
 							</a>
 						</p>
 					<?php endif; ?>
 					<p style="margin:8px 0 0;color:#787c82;font-size:12px;">
-						Last audit: <?php echo esc_html( $last_audit['date'] ); ?>
+						<?php echo esc_html( 'Last audit: ' . $last_audit['date'] ); ?>
 					</p>
 				</div>
 			<?php else : ?>
@@ -130,124 +164,21 @@ function webmatik_main_page() {
 			<?php endif; ?>
 		</div>
 	</div>
-
-	<script>
-	(function() {
-		var saveNonce = '<?php echo esc_js( wp_create_nonce( 'webmatik_save_key' ) ); ?>';
-		var runNonce = '<?php echo esc_js( wp_create_nonce( 'webmatik_run_audit' ) ); ?>';
-		var pollNonce = '<?php echo esc_js( wp_create_nonce( 'webmatik_poll_audit' ) ); ?>';
-
-		// Connect
-		var connectBtn = document.getElementById('webmatik-connect');
-		if (connectBtn) {
-			connectBtn.addEventListener('click', function() {
-				var w = 480, h = 600;
-				var left = (screen.width - w) / 2;
-				var top = (screen.height - h) / 2;
-				window.open(
-					'<?php echo esc_js( WEBMATIK_CONNECT_URL ); ?>',
-					'webmatik-connect',
-					'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top
-				);
-			});
-
-			window.addEventListener('message', function(e) {
-				if (e.data && e.data.type === 'webmatik-connect' && e.data.key) {
-					wp.ajax.post('webmatik_save_key', {
-						nonce: saveNonce,
-						api_key: e.data.key
-					}).done(function() {
-						location.reload();
-					});
-				}
-			});
-		}
-
-		// Disconnect
-		var disconnectBtn = document.getElementById('webmatik-disconnect');
-		if (disconnectBtn) {
-			disconnectBtn.addEventListener('click', function() {
-				if (!confirm('Disconnect from Webmatik?')) return;
-				wp.ajax.post('webmatik_save_key', {
-					nonce: saveNonce,
-					api_key: ''
-				}).done(function() {
-					location.reload();
-				});
-			});
-		}
-
-		// Run Audit
-		var btn = document.getElementById('webmatik-run-audit');
-		var status = document.getElementById('webmatik-status');
-		var result = document.getElementById('webmatik-result');
-
-		if (btn && !btn.disabled) {
-			btn.addEventListener('click', function() {
-				btn.disabled = true;
-				status.textContent = 'Starting audit...';
-				if (result) result.style.display = 'none';
-
-				wp.ajax.post('webmatik_run_audit', {
-					nonce: runNonce
-				}).done(function(data) {
-					if (data.auditId) {
-						status.textContent = 'Analyzing... this takes 2\u20133 minutes.';
-						pollAudit(data.auditId);
-					} else {
-						status.textContent = 'Error: ' + (data.error || 'Unknown error');
-						btn.disabled = false;
-					}
-				}).fail(function(err) {
-					status.textContent = 'Error: ' + (err || 'Request failed');
-					btn.disabled = false;
-				});
-			});
-		}
-
-		function pollAudit(auditId) {
-			wp.ajax.post('webmatik_poll_audit', {
-				nonce: pollNonce,
-				audit_id: auditId
-			}).done(function(data) {
-				if (data.status === 'processing') {
-					setTimeout(function() { pollAudit(auditId); }, 5000);
-				} else if (data.status === 'completed') {
-					status.textContent = '';
-					btn.disabled = false;
-					result.style.display = 'block';
-					result.innerHTML =
-						'<div style="display:flex;align-items:center;gap:15px;">' +
-							'<div style="font-size:36px;font-weight:700;color:#2271b1;">' + data.score + '</div>' +
-							'<div><div style="font-size:14px;font-weight:600;">Growth Score</div>' +
-							'<div style="color:#50575e;">Grade: ' + data.grade + '</div></div>' +
-						'</div>' +
-						(data.reportUrl ? '<p style="margin:10px 0 0;"><a href="' + data.reportUrl + '" target="_blank" class="button">View Full Report &rarr;</a></p>' : '') +
-						'<p style="margin:8px 0 0;color:#787c82;font-size:12px;">Just now</p>';
-				} else {
-					status.textContent = 'Audit failed. Please try again.';
-					btn.disabled = false;
-				}
-			}).fail(function() {
-				setTimeout(function() { pollAudit(auditId); }, 10000);
-			});
-		}
-	})();
-	</script>
 	<?php
 }
 
-/**
- * AJAX handlers
- */
+/* ──────────────────────── AJAX handlers ─────────────────────── */
+
 add_action( 'wp_ajax_webmatik_save_key', 'webmatik_ajax_save_key' );
 
 function webmatik_ajax_save_key() {
 	check_ajax_referer( 'webmatik_save_key', 'nonce' );
+
 	if ( ! current_user_can( 'manage_options' ) ) {
 		wp_send_json_error( 'Unauthorized' );
 	}
-	$key = sanitize_text_field( $_POST['api_key'] ?? '' );
+
+	$key = sanitize_text_field( wp_unslash( $_POST['api_key'] ?? '' ) );
 	update_option( 'webmatik_api_key', $key );
 	wp_send_json_success();
 }
@@ -256,6 +187,7 @@ add_action( 'wp_ajax_webmatik_run_audit', 'webmatik_ajax_run_audit' );
 
 function webmatik_ajax_run_audit() {
 	check_ajax_referer( 'webmatik_run_audit', 'nonce' );
+
 	if ( ! current_user_can( 'manage_options' ) ) {
 		wp_send_json_error( 'Unauthorized' );
 	}
@@ -271,18 +203,18 @@ function webmatik_ajax_run_audit() {
 			'Content-Type' => 'application/json',
 			'X-API-Key'    => $api_key,
 		),
-		'body'    => wp_json_encode( array( 'url' => home_url() ) ),
+		'body' => wp_json_encode( array( 'url' => home_url() ) ),
 	) );
 
 	if ( is_wp_error( $response ) ) {
 		wp_send_json_error( $response->get_error_message() );
 	}
 
-	$body = json_decode( wp_remote_retrieve_body( $response ), true );
 	$code = wp_remote_retrieve_response_code( $response );
+	$body = json_decode( wp_remote_retrieve_body( $response ), true );
 
-	if ( $code !== 200 || empty( $body['auditId'] ) ) {
-		wp_send_json_error( $body['error'] ?? 'API error (HTTP ' . $code . ')' );
+	if ( 200 !== $code || empty( $body['auditId'] ) ) {
+		wp_send_json_error( isset( $body['error'] ) ? $body['error'] : 'API error (HTTP ' . $code . ')' );
 	}
 
 	wp_send_json_success( $body );
@@ -292,15 +224,17 @@ add_action( 'wp_ajax_webmatik_poll_audit', 'webmatik_ajax_poll_audit' );
 
 function webmatik_ajax_poll_audit() {
 	check_ajax_referer( 'webmatik_poll_audit', 'nonce' );
+
 	if ( ! current_user_can( 'manage_options' ) ) {
 		wp_send_json_error( 'Unauthorized' );
 	}
 
 	$api_key  = get_option( 'webmatik_api_key', '' );
-	$audit_id = sanitize_text_field( $_POST['audit_id'] ?? '' );
+	$audit_id = sanitize_text_field( wp_unslash( $_POST['audit_id'] ?? '' ) );
 
-	if ( empty( $api_key ) || empty( $audit_id ) ) {
-		wp_send_json_error( 'Missing data' );
+	// Validate UUID format.
+	if ( empty( $api_key ) || ! preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $audit_id ) ) {
+		wp_send_json_error( 'Invalid request' );
 	}
 
 	$response = wp_remote_get( WEBMATIK_API_URL . '/audit/' . $audit_id, array(
@@ -314,11 +248,11 @@ function webmatik_ajax_poll_audit() {
 
 	$body = json_decode( wp_remote_retrieve_body( $response ), true );
 
-	if ( ! empty( $body['status'] ) && $body['status'] === 'completed' ) {
+	if ( ! empty( $body['status'] ) && 'completed' === $body['status'] ) {
 		update_option( 'webmatik_last_audit', array(
-			'score'      => $body['score'] ?? 0,
-			'grade'      => $body['grade'] ?? '',
-			'report_url' => $body['reportUrl'] ?? '',
+			'score'      => isset( $body['score'] ) ? floatval( $body['score'] ) : 0,
+			'grade'      => sanitize_text_field( isset( $body['grade'] ) ? $body['grade'] : '' ),
+			'report_url' => esc_url_raw( isset( $body['reportUrl'] ) ? $body['reportUrl'] : '' ),
 			'date'       => current_time( 'Y-m-d H:i' ),
 		) );
 	}
@@ -326,13 +260,14 @@ function webmatik_ajax_poll_audit() {
 	wp_send_json_success( $body );
 }
 
-/**
- * Dashboard widget
- */
+/* ──────────────────── Dashboard widget ──────────────────────── */
+
 add_action( 'wp_dashboard_setup', 'webmatik_dashboard_widget' );
 
 function webmatik_dashboard_widget() {
-	if ( ! current_user_can( 'manage_options' ) ) return;
+	if ( ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
 	wp_add_dashboard_widget( 'webmatik_widget', 'Webmatik — Growth Score', 'webmatik_widget_render' );
 }
 
@@ -341,30 +276,33 @@ function webmatik_widget_render() {
 	$last_audit = get_option( 'webmatik_last_audit', null );
 
 	if ( empty( $api_key ) ) {
-		echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=webmatik' ) ) . '">Connect to Webmatik</a> to see your Growth Score.</p>';
+		printf(
+			'<p><a href="%s">%s</a></p>',
+			esc_url( admin_url( 'admin.php?page=webmatik' ) ),
+			esc_html__( 'Connect to Webmatik to see your Growth Score.', 'webmatik' )
+		);
 		return;
 	}
 
 	if ( $last_audit ) {
 		echo '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">';
 		echo '<div style="font-size:28px;font-weight:700;color:#2271b1;">' . esc_html( $last_audit['score'] ) . '</div>';
-		echo '<div><strong>Growth Score</strong><br><span style="color:#787c82;">Grade: ' . esc_html( $last_audit['grade'] ) . '</span></div>';
+		echo '<div><strong>' . esc_html__( 'Growth Score', 'webmatik' ) . '</strong><br>';
+		echo '<span style="color:#787c82;">' . esc_html( 'Grade: ' . $last_audit['grade'] ) . '</span></div>';
 		echo '</div>';
 		if ( ! empty( $last_audit['report_url'] ) ) {
-			echo '<a href="' . esc_url( $last_audit['report_url'] ) . '" target="_blank">View Full Report &rarr;</a>';
+			printf(
+				'<a href="%s" target="_blank" rel="noopener noreferrer">%s &rarr;</a>',
+				esc_url( $last_audit['report_url'] ),
+				esc_html__( 'View Full Report', 'webmatik' )
+			);
 		}
-		echo '<p style="color:#787c82;font-size:12px;margin-top:5px;">Last audit: ' . esc_html( $last_audit['date'] ) . '</p>';
+		echo '<p style="color:#787c82;font-size:12px;margin-top:5px;">' . esc_html( 'Last audit: ' . $last_audit['date'] ) . '</p>';
 	} else {
-		echo '<p><a href="' . esc_url( admin_url( 'admin.php?page=webmatik' ) ) . '">Run your first audit</a></p>';
+		printf(
+			'<p><a href="%s">%s</a></p>',
+			esc_url( admin_url( 'admin.php?page=webmatik' ) ),
+			esc_html__( 'Run your first audit', 'webmatik' )
+		);
 	}
-}
-
-/**
- * Enqueue scripts
- */
-add_action( 'admin_enqueue_scripts', 'webmatik_enqueue_scripts' );
-
-function webmatik_enqueue_scripts( $hook ) {
-	if ( strpos( $hook, 'webmatik' ) === false ) return;
-	wp_enqueue_script( 'wp-util' );
 }

@@ -4,7 +4,7 @@ Tags: seo, audit, performance, accessibility, website analysis
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,9 +26,9 @@ Each audit produces a Growth Score (0–100) and a prioritized action plan with 
 
 **How it works:**
 
-1. Create a free account at [webmatik.ai](https://webmatik.ai)
-2. Get your API key from Account settings
-3. Install this plugin and paste the key
+1. Install this plugin
+2. Click "Connect to Webmatik" — sign in or create a free account
+3. Authorize the connection (one click)
 4. Click "Run Audit" — results appear in 2–3 minutes
 
 **Features:**
@@ -42,14 +42,15 @@ Each audit produces a Growth Score (0–100) and a prioritized action plan with 
 
 1. Upload the `webmatik` folder to `/wp-content/plugins/`
 2. Activate the plugin through the Plugins menu
-3. Go to Webmatik → Settings and enter your API key
-4. Click "Run Audit" on the Webmatik dashboard page
+3. Go to Webmatik in the admin menu
+4. Click "Connect to Webmatik" to authorize
+5. Click "Run Audit"
 
 == Frequently Asked Questions ==
 
 = Do I need a Webmatik account? =
 
-Yes. Create a free account at [webmatik.ai](https://webmatik.ai) to get your API key. The free plan includes 3 audits per month.
+Yes. You can create a free account directly from the plugin via the "Connect to Webmatik" button. The free plan includes 3 audits per month.
 
 = What data does the plugin send? =
 
@@ -65,11 +66,21 @@ No. The audit runs on Webmatik's servers, not on your WordPress installation.
 
 == Screenshots ==
 
-1. Dashboard page with Growth Score and audit button
-2. Settings page with API key configuration
+1. Plugin page with Connect and Run Audit buttons
+2. Growth Score result after audit
 3. WordPress Dashboard widget
 
 == Changelog ==
+
+= 1.1.0 =
+* New: One-click Connect flow — no manual API key entry needed
+* New: Connect and Run Audit on a single page
+* New: uninstall.php for clean option removal on plugin delete
+* Improved: All JS externalized via wp_enqueue_script (WP coding standards)
+* Improved: Full i18n support — all strings translation-ready
+* Improved: Data sanitization and output escaping throughout
+* Improved: UUID validation on audit polling
+* Improved: postMessage origin verification for security
 
 = 1.0.0 =
 * Initial release
