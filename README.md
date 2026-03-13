@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://webmatik.ai">
-    <img src="https://webmatik.ai/logo.svg" alt="Webmatik" width="200" />
+    <img src="https://webmatik.ai/logo.png" alt="Webmatik" width="200" />
   </a>
 </p>
 
@@ -70,18 +70,6 @@
 4. Go to **Webmatik** in the admin sidebar and connect your account
 
 ## 🔧 How It Works
-
-```
-┌─────────────────┐       ┌───────────────┐       ┌─────────────────┐
-│  1. Connect      │──────▶│  2. Run Audit  │──────▶│  3. Get Results  │
-│                  │       │                │       │                  │
-│  Click "Connect" │       │  Click "Run    │       │  Growth Score,   │
-│  to authorize    │       │  Audit" — your │       │  grade, and link │
-│  your Webmatik   │       │  site URL is   │       │  to full report  │
-│  account via     │       │  sent to the   │       │  on webmatik.ai  │
-│  secure popup    │       │  Webmatik API  │       │                  │
-└─────────────────┘       └───────────────┘       └─────────────────┘
-```
 
 1. **Connect** — Click "Connect to Webmatik" to open a secure popup. Sign in or create a free account, then authorize the connection with one click.
 2. **Run Audit** — Click "Run Audit". Your site URL is sent to the Webmatik API, which analyzes it across 7 categories (typically 2–3 minutes).
