@@ -1,5 +1,5 @@
 === Webmatik — AI Website Audit ===
-Contributors: webmatik
+Contributors: belovdigital
 Tags: seo, audit, performance, accessibility, website analysis
 Requires at least: 5.8
 Tested up to: 6.9
@@ -78,3 +78,16 @@ No. The audit runs on Webmatik's servers, not on your WordPress installation.
 * Run audit directly from plugin page
 * Dashboard widget with Growth Score
 * Full report link to webmatik.ai
+
+== External Services ==
+
+This plugin connects to the Webmatik API to run AI-powered website audits. No audit processing happens on your WordPress server — all analysis is performed on Webmatik's servers.
+
+= Webmatik API (webmatik.ai) =
+
+* **What it does:** Runs an AI-powered audit of your website analyzing 50+ growth signals across 7 categories (Performance, SEO, GEO, UI/UX, Conversion, Retention, Accessibility).
+* **When data is sent:** Only when you explicitly click "Run Audit" on the plugin settings page, and when the plugin polls for audit results.
+* **What data is sent:** Your website's homepage URL and your Webmatik API key.
+* **Service provider:** Webmatik by Belov Digital Agency
+* [Terms of Service](https://webmatik.ai/terms)
+* [Privacy Policy](https://webmatik.ai/privacy)
